@@ -8,6 +8,7 @@ import { UserQueryDto } from '../dto/user-query.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { plainToClass } from 'class-transformer';
 import { ConfigService } from '@nestjs/config';
+import { TenantUser } from 'src/modules/tenants/entities/tenant-user.entity';
 import { UserRolesService } from '../../rbac/services/user-roles.service';
 
 @Injectable()
@@ -15,6 +16,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(TenantUser)
+    private readonly tenantUserRepository: Repository<TenantUser>,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => UserRolesService))
     private readonly userRolesService: UserRolesService,
@@ -75,6 +78,7 @@ export class UsersService {
       createdAfter,
       createdBefore,
       hasRecentLogin,
+      tenantIds
     } = query;
 
     const queryBuilder = this.userRepository.createQueryBuilder('user')
@@ -82,6 +86,8 @@ export class UsersService {
       .leftJoinAndSelect('userRole.role', 'role')
       .leftJoinAndSelect('role.rolePermissions', 'rolePermission')
       .leftJoinAndSelect('rolePermission.permission', 'permission')
+      .leftJoinAndSelect('user.tenantUsers', 'tenantUser')
+    // .leftJoinAndSelect('tenantUser.tenant', 'tenant');
 
     // Apply filters
     if (username) {
@@ -118,6 +124,11 @@ export class UsersService {
       queryBuilder.andWhere('user.lastLogin > :cutoffTime', { cutoffTime });
     }
 
+    // Lọc theo tenant IDs
+    if (tenantIds !== undefined && tenantIds.length > 0) {
+      queryBuilder.andWhere('tenantUser.tenantId IN (:...tenantIds)', { tenantIds });
+    }
+
     // Get total count
     const total = await queryBuilder.getCount();
 
@@ -142,13 +153,16 @@ export class UsersService {
       const permissions = Array.from(permissionsSet);
 
       // Extract tenant IDs
+      const tenantIds = user.tenantUsers?.map(tu => tu.tenantId) || [];
       // Remove sensitive data and relations before transforming
-      const { userRoles,  passwordHash, ...userWithoutSensitiveData } = user;
+      const { userRoles, tenantUsers, passwordHash, ...userWithoutSensitiveData } = user;
       const userDto = plainToClass(UserResponseDto, userWithoutSensitiveData);
       return {
         ...userDto,
         roles,
         permissions,
+        tenantIds: user.tenantUsers.length > 0 ? tenantIds : null,
+        tenants: user.tenantUsers.length > 0 ? user.tenantUsers : null,
       };
     });
 
@@ -170,6 +184,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
     delete userWithPermissions.userRoles // không trả về dữ liệu
+    delete userWithPermissions.tenantUsers // không trả về dữ liệu
     return userWithPermissions;
   }
 
@@ -187,7 +202,7 @@ export class UsersService {
     return user;
   }
 
-  async findOneWithPermissions(id: string): Promise<User & { permissions: string[], roles: string[] }> {
+  async findOneWithPermissions(id: string): Promise<User & { permissions: string[], roles: string[], tenantIds: string[], tenants: any[] }> {
     const user = await this.userRepository.findOne({
       where: { id },
       relations: ['userRoles', 'userRoles.role', 'userRoles.role.rolePermissions', 'userRoles.role.rolePermissions.permission', 'tenantUsers'],
@@ -210,10 +225,14 @@ export class UsersService {
       });
     });
 
+    // Extract tenant IDs
+    const tenantIds: string[] = user.tenantUsers?.map(tu => tu.tenantId) || [];
     return {
       ...user,
       permissions: Array.from(permissions),
-      roles: Array.from(roles)
+      roles: Array.from(roles),
+      tenantIds: user.tenantUsers.length > 0 ? tenantIds : null,
+      tenants: user.tenantUsers.length > 0 ? user.tenantUsers : null,
     };
   }
 
@@ -302,6 +321,17 @@ export class UsersService {
     const reDelUserRoles = await this.userRolesService.removeUserRoles(id);
     if (!reDelUserRoles) {
       throw new BadRequestException('Failed to delete user roles');
+    }
+    // thực hiện xoá user tenant
+    // kiểm tra user có tồn tại trong tenant user không
+    const existingTenantUser = await this.tenantUserRepository.find({
+      where: { userId: id },
+    });
+    if (existingTenantUser.length > 0) {
+      const reDelTenantUser = await this.tenantUserRepository.delete({ userId: id });
+      if (reDelTenantUser.affected === 0) {
+        throw new BadRequestException('Failed to delete tenant user');
+      }
     }
     
     // thực hiện xoá user

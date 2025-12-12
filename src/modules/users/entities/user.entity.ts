@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { UserRole } from '../../rbac/entities/user-role.entity';
+import { TenantUser } from '../../tenants/entities/tenant-user.entity';
 
 @Entity('users')
 export class User {
@@ -52,4 +53,6 @@ export class User {
   @OneToMany(() => UserRole, (userRole) => userRole.user)
   userRoles: UserRole[];
 
+  @OneToMany(() => TenantUser, (tenantUser) => tenantUser.user)
+  tenantUsers: TenantUser[];
 }

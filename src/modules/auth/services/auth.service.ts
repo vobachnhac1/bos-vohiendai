@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../users/services/users.service';
+import { TenantUsersService } from '../../tenants/services/tenant-users.service';
 import { UserRolesService } from '../../rbac/services/user-roles.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
@@ -51,6 +52,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly tenantUsersService: TenantUsersService,
     private readonly userRolesService: UserRolesService,
   ) {}
 
@@ -73,6 +75,18 @@ export class AuthService {
     // thêm roles_id
     const user = await this.usersService.create(registerDto);
     
+    // Get user's tenants (may be empty for new user)
+    const tenantUsers = await this.tenantUsersService.getUserTenants(user.id);
+
+    const tenants: TenantInfo[] = tenantUsers.length> 0 ? tenantUsers.map(tu => ({
+      id: tu.tenant.id,
+      code: tu.tenant.code,
+      name: tu.tenant.name,
+      domain: tu.tenant.domain,
+      status: tu.tenant.status,
+      plan: tu.tenant.plan,
+    })):  {} as TenantInfo[];
+
     // Get user roles and permissions
     const userWithRoles = await this.usersService.findOneWithRoles(user.id);
     const permissions = await this.userRolesService.getUserPermissions(user.id);
@@ -106,7 +120,9 @@ export class AuthService {
         fullName: user.fullName,
         role: user.role, // Legacy field
         roles: roleNames,
-        permissions: permissions
+        permissions: permissions,
+        tenantIds: tenants.length > 0 ? tenants?.map(tent=> tent.id) : null,
+        tenants: tenantUsers.length > 0 ? tenants : undefined,
       },
     };
   }
@@ -121,6 +137,16 @@ export class AuthService {
     }
 
     // Get user's tenants
+    const tenantUsers = await this.tenantUsersService.getUserTenants(user.id);
+    const tenants: TenantInfo[] = tenantUsers.length > 0 ? tenantUsers.map(tu => ({
+      id: tu.tenant.id,
+      code: tu.tenant.code,
+      name: tu.tenant.name,
+      domain: tu.tenant.domain,
+      status: tu.tenant.status,
+      plan: tu.tenant.plan,
+      // areas: tu.tenant.tenantAreas?.map(ta => ta.area) || [],
+    })):  {} as TenantInfo [];
     // Get user roles and permissions
     const userWithRoles = await this.usersService.findOneWithRoles(user.id);
     const permissions = await this.userRolesService.getUserPermissions(user.id);
@@ -160,7 +186,10 @@ export class AuthService {
         fullName: user.fullName,
         role: user.role, // Legacy field
         roles: roleNames,
-        permissions: permissions
+        permissions: permissions,
+        tenantIds: tenants.length > 0 ? tenants?.map(tent=> tent.id) : null,
+        tenants: tenantUsers.length > 0 ? tenants : null,
+
       },
     };
   }

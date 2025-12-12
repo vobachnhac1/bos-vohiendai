@@ -6,11 +6,13 @@ import { AuthService } from './services/auth.service';
 import { AuthController } from './controllers/auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
+import { TenantsModule } from '../tenants/tenants.module';
 import { RbacModule } from '../rbac/rbac.module';
 
 @Module({
   imports: [
     UsersModule,
+    TenantsModule,
     RbacModule,
     PassportModule,
     JwtModule.registerAsync({
