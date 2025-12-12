@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test Client - GPS Backend</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .websocket-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .authenticated {
+            border-left: 5px solid #007bff;
+        }
+
+        .public {
+            border-left: 5px solid #28a745;
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        .connected {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .disconnected {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        .messages {
+            height: 350px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+            padding: 15px;
+            margin: 15px 0;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+        }
+
+        .message {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 4px solid transparent;
+            line-height: 1.4;
+        }
+
+        .message.received {
+            background-color: #e3f2fd;
+            border-left-color: #2196F3;
+        }
+
+        .message.sent {
+            background-color: #fff3e0;
+            border-left-color: #ff9800;
+        }
+
+        .message.error {
+            background-color: #ffebee;
+            color: #c62828;
+            border-left-color: #f44336;
+        }
+
+        .message.info {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            border-left-color: #4caf50;
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 12px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #9E9E9E, #757575);
+            color: white;
+            box-shadow: 0 4px 15px rgba(158, 158, 158, 0.3);
+        }
+
+        input[type="text"] {
+            padding: 12px 15px;
+            margin: 5px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        .control-group {
+            background: rgba(248, 249, 250, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 1px solid #e0e0e0;
+        }
+
+        .control-group h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .stat-item {
+            background: rgba(248, 249, 250, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976D2;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>WebSocket Test Client</h1>
+        <p>GPS Backend - Real-time AIS Data Streaming & CRUD API Testing</p>
+    </div>
+
+    <div class="container">
+        <!-- Authenticated WebSocket Panel -->
+        <div class="websocket-panel authenticated">
+            <h2 class="panel-title">🔐 Authenticated WebSocket (/auth)</h2>
+            <div id="auth-status" class="status disconnected">🔴 Disconnected</div>
+
+            <div class="control-group">
+                <h4>🔑 Connection</h4>
+                <input type="text" id="auth-token" placeholder="JWT Token (optional for testing)" style="width: 100%; max-width: 350px;">
+                <div style="margin-top: 10px;">
+                    <button class="btn-primary" onclick="connectAuth()">🔗 Connect</button>
+                    <button class="btn-danger" onclick="disconnectAuth()">❌ Disconnect</button>
+                </div>
+            </div>
+<!-- 
+            <div class="control-group">
+                <h4>📡 Actions</h4>
+                <input type="text" id="auth-message" placeholder="Custom message" style="width: 200px;">
+                <div style="margin-top: 10px;">
+                    <button class="btn-success" onclick="sendAuthMessage()">📍 Send GPS Location</button>
+                    <button class="btn-success" onclick="joinAuthRoom()">🚪 Join Room</button>
+                    <button class="btn-success" onclick="leaveAuthRoom()">🚶 Leave Room</button>
+                </div>
+            </div> -->
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="auth-messages-count">0</div>
+                    <div class="stat-label">📨 Messages</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="auth-vessels-count">0</div>
+                    <div class="stat-label">🚢 Vessels</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <button class="btn-secondary" onclick="clearMessages('auth')">🗑️ Clear Log</button>
+                <h4 style="margin: 10px 0;">📋 Message Log:</h4>
+                <div class="messages" id="auth-messages"></div>
+            </div>
+        </div>
+
+        <!-- Public WebSocket Panel -->
+        <div class="websocket-panel public">
+            <h2 class="panel-title">🌐 Public WebSocket (/public)</h2>
+            <div id="public-status" class="status disconnected">🔴 Disconnected</div>
+
+            <div class="control-group">
+                <h4>🔗 Connection</h4>
+                <button class="btn-primary" onclick="connectPublic()">🔗 Connect</button>
+                <button class="btn-danger" onclick="disconnectPublic()">❌ Disconnect</button>
+            </div>
+
+            <div class="control-group">
+                <h4>📡 AIS Subscription</h4>
+                <button class="btn-success" onclick="subscribeAis()">📡 Subscribe AIS</button>
+                <button class="btn-success" onclick="unsubscribeAis()">📴 Unsubscribe AIS</button>
+                <button class="btn-success" onclick="sendPing()">🏓 Ping</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="public-messages-count">0</div>
+                    <div class="stat-label">📨 Messages</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="public-vessels-count">0</div>
+                    <div class="stat-label">🚢 Vessels</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <button class="btn-secondary" onclick="clearMessages('public')">🗑️ Clear Log</button>
+                <h4 style="margin: 10px 0;">📋 Message Log:</h4>
+                <div class="messages" id="public-messages"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authSocket = null;
+        let publicSocket = null;
+        let authMessageCount = 0;
+        let publicMessageCount = 0;
+        let authVessels = new Set();
+        let publicVessels = new Set();
+
+        // Authenticated WebSocket Functions
+        function connectAuth() {
+            const token = document.getElementById('auth-token').value;
+
+            // Allow connection without token for testing
+            const socketOptions = token ? {
+                auth: { token: token }
+            } : {};
+
+            authSocket = io('ws://localhost:7878/auth', socketOptions);
+
+            authSocket.on('connect', () => {
+                updateStatus('auth', '🟢 Connected', true);
+                addMessage('auth', '✅ Connected to authenticated WebSocket', 'info');
+            });
+
+            authSocket.on('disconnect', () => {
+                updateStatus('auth', '🔴 Disconnected', false);
+                addMessage('auth', '❌ Disconnected from authenticated WebSocket', 'error');
+            });
+
+            authSocket.on('connect_error', (error) => {
+                updateStatus('auth', '🔴 Connection Error', false);
+                addMessage('auth', `❌ Connection Error: ${error.message}`, 'error');
+            });
+
+            // Handle standardized message format: { type, data: { success, status, data } }
+            authSocket.on('connected', (message) => {
+                handleMessage('auth', 'connected', message);
+            });
+
+            authSocket.on('error', (message) => {
+                handleMessage('auth', 'error', message);
+            });
+
+            authSocket.on('test-message', (message) => {
+                handleMessage('auth', 'test-message', message);
+            });
+
+            authSocket.on('test-broadcast', (message) => {
+                handleMessage('auth', 'test-broadcast', message);
+            });
+
+            // Listen for AIS_DATA messages (main AIS data stream)
+            authSocket.on('AIS_DATA', (message) => {
+                handleMessage('auth', 'AIS_DATA', message);
+                // Extract MMSI from nested message structure
+                if (message.data?.data?.message) {
+                    try {
+                        const aisData = JSON.parse(message.data.data.message);
+                        if (aisData.mmsi) {
+                            authVessels.add(aisData.mmsi);
+                            updateStats('auth');
+                        }
+                    } catch (e) {
+                        console.log('Error parsing AIS message:', e);
+                    }
+                }
+            });
+
+            // Listen for RES_MSG (response messages)
+            authSocket.on('RES_MSG', (message) => {
+                handleMessage('auth', 'RES_MSG', message);
+            });
+
+            // Listen for SUB_AIS (subscription responses)
+            authSocket.on('SUB_AIS', (message) => {
+                handleMessage('auth', 'SUB_AIS', message);
+            });
+
+            // Legacy listeners for backward compatibility
+            authSocket.on('ais-message', (message) => {
+                handleMessage('auth', 'ais-message', message);
+                if (message.data?.data?.mmsi) {
+                    authVessels.add(message.data.data.mmsi);
+                    updateStats('auth');
+                }
+            });
+
+            authSocket.on('vessel-update', (message) => {
+                handleMessage('auth', 'vessel-update', message);
+                if (message.data?.data?.mmsi) {
+                    authVessels.add(message.data.data.mmsi);
+                    updateStats('auth');
+                }
+            });
+
+            authSocket.on('room-joined', (message) => {
+                handleMessage('auth', 'room-joined', message);
+            });
+
+            authSocket.on('room-left', (message) => {
+                handleMessage('auth', 'room-left', message);
+            });
+        }
+
+        function disconnectAuth() {
+            if (authSocket) {
+                authSocket.disconnect();
+                authSocket = null;
+                updateStatus('auth', '🔴 Disconnected', false);
+            }
+        }
+
+        function sendAuthMessage() {
+            if (!authSocket) {
+                addMessage('auth', '❌ Not connected', 'error');
+                return;
+            }
+
+            const message = document.getElementById('auth-message').value || 'Test GPS location from WebSocket client';
+            authSocket.emit('gps-location', {
+                latitude: 10.762622 + (Math.random() - 0.5) * 0.01, // Add small random variation
+                longitude: 106.660172 + (Math.random() - 0.5) * 0.01,
+                timestamp: new Date().toISOString(),
+                message: message,
+                speed: Math.random() * 20,
+                heading: Math.random() * 360
+            });
+            addMessage('auth', `📍 Sent GPS location: ${message}`, 'sent');
+        }
+
+        function joinAuthRoom() {
+            if (!authSocket) {
+                addMessage('auth', '❌ Not connected', 'error');
+                return;
+            }
+
+            const room = 'auth-test-room';
+            authSocket.emit('join-room', { room: room });
+            addMessage('auth', `🚪 Requested to join ${room}`, 'sent');
+        }
+
+        function leaveAuthRoom() {
+            if (!authSocket) {
+                addMessage('auth', '❌ Not connected', 'error');
+                return;
+            }
+
+            const room = 'auth-test-room';
+            authSocket.emit('leave-room', { room: room });
+            addMessage('auth', `🚶 Requested to leave ${room}`, 'sent');
+        }
+
+        // Public WebSocket Functions
+        function connectPublic() {
+            publicSocket = io('ws://localhost:7878/public');
+
+            publicSocket.on('connect', () => {
+                updateStatus('public', '🟢 Connected', true);
+                addMessage('public', '✅ Connected to public WebSocket', 'info');
+            });
+
+            publicSocket.on('disconnect', () => {
+                updateStatus('public', '🔴 Disconnected', false);
+                addMessage('public', '❌ Disconnected from public WebSocket', 'error');
+            });
+
+            publicSocket.on('connect_error', (error) => {
+                updateStatus('public', '🔴 Connection Error', false);
+                addMessage('public', `❌ Connection Error: ${error.message}`, 'error');
+            });
+
+            // Handle standardized message format: { type, data: { success, status, data } }
+            publicSocket.on('connected', (message) => {
+                handleMessage('public', 'connected', message);
+            });
+
+            publicSocket.on('error', (message) => {
+                handleMessage('public', 'error', message);
+            });
+
+            publicSocket.on('test-message', (message) => {
+                handleMessage('public', 'test-message', message);
+            });
+
+            // Listen for AIS_DATA messages (main AIS data stream)
+            publicSocket.on('AIS_DATA', (message) => {
+                handleMessage('public', 'AIS_DATA', message);
+                // Extract MMSI from nested message structure
+                if (message.data?.data?.message) {
+                    try {
+                        const aisData = JSON.parse(message.data.data.message);
+                        if (aisData.mmsi) {
+                            publicVessels.add(aisData.mmsi);
+                            updateStats('public');
+                        }
+                    } catch (e) {
+                        console.log('Error parsing AIS message:', e);
+                    }
+                }
+            });
+
+            // Legacy ais-data listener for backward compatibility
+            publicSocket.on('RES_MSG', (message) => {
+                handleMessage('public', 'ais-data', message);
+                if (message.data?.data?.mmsi) {
+                    publicVessels.add(message.data.data.mmsi);
+                    updateStats('public');
+                }
+            });
+
+            publicSocket.on('VESSEL_UPDATE', (message) => {
+                handleMessage('public', 'VESSEL_UPDATE', message);
+                if (message.data?.data?.mmsi) {
+                    publicVessels.add(message.data.data.mmsi);
+                    updateStats('public');
+                }
+            });
+
+            publicSocket.on('SUBSCRIBED', (message) => {
+                handleMessage('public', 'SUBSCRIBED', message);
+            });
+
+            publicSocket.on('UNSUBSCRIBED', (message) => {
+                handleMessage('public', 'UNSUBSCRIBED', message);
+            });
+
+            // Listen for RES_MSG (response messages)
+            publicSocket.on('RES_MSG', (message) => {
+                handleMessage('public', 'RES_MSG', message);
+            });
+
+            // Listen for SUB_AIS (subscription responses)
+            publicSocket.on('SUB_AIS', (message) => {
+                handleMessage('public', 'SUB_AIS', message);
+            });
+
+            publicSocket.on('room-joined', (message) => {
+                handleMessage('public', 'room-joined', message);
+            });
+
+            publicSocket.on('room-left', (message) => {
+                handleMessage('public', 'room-left', message);
+            });
+
+            publicSocket.on('pong', (message) => {
+                handleMessage('public', 'pong', message);
+            });
+        }
+
+        function disconnectPublic() {
+            if (publicSocket) {
+                publicSocket.disconnect();
+                publicSocket = null;
+                updateStatus('public', '🔴 Disconnected', false);
+            }
+        }
+
+        function subscribeAis() {
+            if (!publicSocket) {
+                addMessage('public', '❌ Not connected', 'error');
+                return;
+            }
+
+            publicSocket.emit('SUB_AIS', {});
+            addMessage('public', '📡 Requested AIS subscription', 'sent');
+        }
+
+        function unsubscribeAis() {
+            if (!publicSocket) {
+                addMessage('public', '❌ Not connected', 'error');
+                return;
+            }
+
+            publicSocket.emit('UNSUB_AIS', {});
+            addMessage('public', '📴 Requested AIS unsubscription', 'sent');
+        }
+
+        function sendPing() {
+            if (!publicSocket) {
+                addMessage('public', '❌ Not connected', 'error');
+                return;
+            }
+
+            publicSocket.emit('PING', {
+                timestamp: new Date().toISOString(),
+                message: 'Ping from WebSocket test client'
+            });
+            addMessage('public', '🏓 Sent ping', 'sent');
+        }
+
+        function joinPublicRoom() {
+            if (!publicSocket) {
+                addMessage('public', '❌ Not connected', 'error');
+                return;
+            }
+
+            const room = document.getElementById('public-room').value || 'public-room';
+            publicSocket.emit('join-room', { room: room });
+            addMessage('public', `🚪 Requested to join ${room}`, 'sent');
+        }
+
+        function leavePublicRoom() {
+            if (!publicSocket) {
+                addMessage('public', '❌ Not connected', 'error');
+                return;
+            }
+
+            const room = document.getElementById('public-room').value || 'public-room';
+            publicSocket.emit('leave-room', { room: room });
+            addMessage('public', `🚶 Requested to leave ${room}`, 'sent');
+        }
+
+        // Helper Functions
+        function updateStatus(type, status, connected) {
+            const statusEl = document.getElementById(`${type}-status`);
+            statusEl.textContent = status;
+            statusEl.className = `status ${connected ? 'connected' : 'disconnected'}`;
+        }
+
+        function handleMessage(type, eventType, message) {
+            if (type === 'auth') authMessageCount++;
+            if (type === 'public') publicMessageCount++;
+
+            let displayMessage = '';
+            let messageClass = 'received';
+
+            // Special handling for AIS_DATA messages
+            if (eventType === 'AIS_DATA' && message.data?.data?.message) {
+                try {
+                    const aisData = JSON.parse(message.data.data.message);
+                    displayMessage = `[${eventType}] 🚢 MMSI: ${aisData.mmsi} | Lat: ${aisData.lat?.toFixed(6)} | Lon: ${aisData.lon?.toFixed(6)} | SOG: ${aisData.sog} | COG: ${aisData.cog}`;
+                    messageClass = 'received';
+                } catch (e) {
+                    displayMessage = `[${eventType}] Raw: ${message.data.data.message}`;
+                    messageClass = 'error';
+                }
+            }
+            // Handle standardized message format
+            else if (message && typeof message === 'object') {
+                if (message.data) {
+                    const { success, status, data } = message.data;
+                    displayMessage = `[${eventType.toUpperCase()}] ${status || 'Message received'}`;
+                    if (data && eventType !== 'AIS_DATA') {
+                        // For non-AIS messages, show full data
+                        if (typeof data === 'object') {
+                            displayMessage += `: ${JSON.stringify(data, null, 2)}`;
+                        } else {
+                            displayMessage += `: ${data}`;
+                        }
+                    }
+                    messageClass = success !== false ? 'received' : 'error';
+                } else {
+                    displayMessage = `[${eventType.toUpperCase()}] ${JSON.stringify(message, null, 2)}`;
+                }
+            } else {
+                displayMessage = `[${eventType.toUpperCase()}] ${message}`;
+            }
+
+            addMessage(type, displayMessage, messageClass);
+            updateStats(type);
+        }
+
+        function addMessage(type, message, messageType) {
+            const messagesEl = document.getElementById(`${type}-messages`);
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${messageType}`;
+
+            const timestamp = new Date().toLocaleTimeString();
+            messageEl.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+
+            messagesEl.appendChild(messageEl);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function updateStats(type) {
+            if (type === 'auth') {
+                document.getElementById('auth-messages-count').textContent = authMessageCount;
+                document.getElementById('auth-vessels-count').textContent = authVessels.size;
+            } else {
+                document.getElementById('public-messages-count').textContent = publicMessageCount;
+                document.getElementById('public-vessels-count').textContent = publicVessels.size;
+            }
+        }
+
+        function clearMessages(type) {
+            const messagesEl = document.getElementById(`${type}-messages`);
+            messagesEl.innerHTML = '';
+
+            if (type === 'auth') {
+                authMessageCount = 0;
+                authVessels.clear();
+            } else {
+                publicMessageCount = 0;
+                publicVessels.clear();
+            }
+            updateStats(type);
+        }
+
+        // Auto-connect to public WebSocket on page load
+        window.onload = function() {
+            addMessage('auth', '🔄 Page loaded. Ready to connect to WebSocket servers.', 'info');
+            addMessage('public', '🔄 Page loaded. Ready to connect to WebSocket servers.', 'info');
+
+            // Auto-connect to public WebSocket after 1 second
+            setTimeout(() => {
+                connectPublic();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

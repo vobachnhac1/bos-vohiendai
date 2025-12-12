@@ -1,0 +1,63 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# Documentation
+README.md
+*.md
+
+# Environment files
+.env
+.env.*
+
+# Logs
+logs
+*.log
+
+# Coverage
+coverage
+.nyc_output
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp
+temp
+*.tmp
+*.temp
+
+# Build output (will be created during build)
+dist
+
+# Test files
+test
+*.spec.ts
+*.test.ts
+
+# Client examples
+client-examples
+
+# Development files
+.eslintrc.js
+.prettierrc
+jest.config.js
+# tsconfig.json
+tsconfig.build.json

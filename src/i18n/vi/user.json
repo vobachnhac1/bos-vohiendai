@@ -1,0 +1,29 @@
+{
+  "user": {
+    "created": "Tạo người dùng thành công",
+    "updated": "Cập nhật người dùng thành công",
+    "deleted": "Xóa người dùng thành công",
+    "not_found": "Không tìm thấy người dùng",
+    "already_exists": "Người dùng đã tồn tại",
+    "profile_updated": "Cập nhật hồ sơ thành công",
+    "status_changed": "Thay đổi trạng thái người dùng thành công"
+  },
+  "role": {
+    "assigned": "Gán vai trò thành công",
+    "revoked": "Thu hồi vai trò thành công",
+    "not_found": "Không tìm thấy vai trò",
+    "already_assigned": "Vai trò đã được gán",
+    "created": "Tạo vai trò thành công",
+    "updated": "Cập nhật vai trò thành công",
+    "deleted": "Xóa vai trò thành công"
+  },
+  "permission": {
+    "granted": "Cấp quyền thành công",
+    "revoked": "Thu hồi quyền thành công",
+    "not_found": "Không tìm thấy quyền",
+    "created": "Tạo quyền thành công",
+    "updated": "Cập nhật quyền thành công",
+    "deleted": "Xóa quyền thành công"
+  }
+}
+

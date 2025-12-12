@@ -1,0 +1,39 @@
+{
+  "success": {
+    "created": "Created successfully",
+    "updated": "Updated successfully",
+    "deleted": "Deleted successfully",
+    "retrieved": "Retrieved successfully",
+    "operation_completed": "Operation completed"
+  },
+  "error": {
+    "not_found": "Not found",
+    "already_exists": "Already exists",
+    "invalid_input": "Invalid input",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "internal_server_error": "Internal server error",
+    "bad_request": "Bad request",
+    "conflict": "Conflict",
+    "validation_failed": "Validation failed"
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "invalid_format": "{{field}} has invalid format",
+    "min_length": "{{field}} must be at least {{min}} characters",
+    "max_length": "{{field}} must not exceed {{max}} characters",
+    "min_value": "{{field}} must be greater than or equal to {{min}}",
+    "max_value": "{{field}} must be less than or equal to {{max}}",
+    "invalid_email": "Invalid email",
+    "invalid_phone": "Invalid phone number",
+    "invalid_date": "Invalid date",
+    "must_be_unique": "{{field}} already exists"
+  },
+  "pagination": {
+    "page": "Page",
+    "limit": "Limit",
+    "total": "Total",
+    "showing": "Showing {{from}} to {{to}} of {{total}} results"
+  }
+}
+

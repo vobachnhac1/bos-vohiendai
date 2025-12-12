@@ -1,0 +1,39 @@
+{
+  "success": {
+    "created": "Tạo thành công",
+    "updated": "Cập nhật thành công",
+    "deleted": "Xóa thành công",
+    "retrieved": "Lấy dữ liệu thành công",
+    "operation_completed": "Thao tác hoàn thành"
+  },
+  "error": {
+    "not_found": "Không tìm thấy",
+    "already_exists": "Đã tồn tại",
+    "invalid_input": "Dữ liệu đầu vào không hợp lệ",
+    "unauthorized": "Không có quyền truy cập",
+    "forbidden": "Không có quyền thực hiện",
+    "internal_server_error": "Lỗi máy chủ nội bộ",
+    "bad_request": "Yêu cầu không hợp lệ",
+    "conflict": "Xung đột dữ liệu",
+    "validation_failed": "Xác thực thất bại"
+  },
+  "validation": {
+    "required": "{{field}} là bắt buộc",
+    "invalid_format": "{{field}} không đúng định dạng",
+    "min_length": "{{field}} phải có ít nhất {{min}} ký tự",
+    "max_length": "{{field}} không được vượt quá {{max}} ký tự",
+    "min_value": "{{field}} phải lớn hơn hoặc bằng {{min}}",
+    "max_value": "{{field}} phải nhỏ hơn hoặc bằng {{max}}",
+    "invalid_email": "Email không hợp lệ",
+    "invalid_phone": "Số điện thoại không hợp lệ",
+    "invalid_date": "Ngày tháng không hợp lệ",
+    "must_be_unique": "{{field}} đã tồn tại"
+  },
+  "pagination": {
+    "page": "Trang",
+    "limit": "Số lượng",
+    "total": "Tổng số",
+    "showing": "Hiển thị {{from}} đến {{to}} trong tổng số {{total}} kết quả"
+  }
+}
+
