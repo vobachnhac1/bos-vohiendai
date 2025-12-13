@@ -25,6 +25,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { CommonsModule } from './modules/commons/commons.module';
 import { RbacModule } from './modules/rbac/rbac.module';
+import { CertificateModule } from './modules/certificate/certificate.module';
+import { StaffModule } from './modules/staff/staff.module';
 
 @Module({
   imports: [
@@ -66,6 +68,8 @@ import { RbacModule } from './modules/rbac/rbac.module';
     UsersModule,
     CommonsModule,
     RbacModule,
+    CertificateModule,
+    StaffModule,
   ],
   controllers: [AppController],
   providers: [
