@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { Subject } from './subject.entity';
 
-@Entity({ name: 'rank_level' })
+@Entity({ name: 'subject_level' })
 @Index('uq_rank_level_subject_code', ['subjectId', 'code'], { unique: true })
 @Index('uq_rank_level_subject_order', ['subjectId', 'orderIndex'], { unique: true })
 export class SubjectLevel {
