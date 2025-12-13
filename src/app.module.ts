@@ -27,6 +27,7 @@ import { CommonsModule } from './modules/commons/commons.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { CertificateModule } from './modules/certificate/certificate.module';
 import { StaffModule } from './modules/staff/staff.module';
+import { SubjectModule } from './modules/subject/subject.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { StaffModule } from './modules/staff/staff.module';
     RbacModule,
     CertificateModule,
     StaffModule,
+    SubjectModule,
   ],
   controllers: [AppController],
   providers: [
